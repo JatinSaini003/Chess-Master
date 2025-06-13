@@ -16,23 +16,12 @@ import bB from '../../assets/pieces/bB.svg';
 import bQ from '../../assets/pieces/bQ.svg';
 import bK from '../../assets/pieces/bK.svg';
 
-
 const pieceImages = {
-    'P': wP,
-    'R': wR,
-    'N': wN,
-    'B': wB,
-    'Q': wQ,
-    'K': wK,
-    'p': bP,
-    'r': bR,
-    'n': bN,
-    'b': bB,
-    'q': bQ,
-    'k': bK,
+    P: wP, R: wR, N: wN, B: wB, Q: wQ, K: wK,
+    p: bP, r: bR, n: bN, b: bB, q: bQ, k: bK,
 };
 
-function DraggablePiece({ piece, square, pieceImages, isChecked }) {
+function DraggablePiece({ piece, square, isChecked }) {
     const [{ isDragging }, drag] = useDrag({
         type: 'piece',
         item: { piece, square },
@@ -47,13 +36,13 @@ function DraggablePiece({ piece, square, pieceImages, isChecked }) {
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className={`absolute inset-0 cursor-grab ${isDragging ? 'opacity-50' : ''}`}
+            className={`absolute inset-0 cursor-grab select-none transition-opacity ${isDragging ? 'opacity-40' : 'opacity-100'}`}
         >
             <img
                 src={pieceImages[piece]}
                 alt={piece}
-                className={`w-full h-full p-0.5 ${isChecked ? 'animate-pulse' : ''}`}
                 draggable={false}
+                className={`w-full h-full p-[2px] sm:p-1 md:p-1.5 ${isChecked ? 'animate-pulse' : ''}`}
             />
         </motion.div>
     );

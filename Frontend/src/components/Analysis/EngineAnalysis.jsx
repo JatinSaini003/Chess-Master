@@ -1,5 +1,4 @@
-// src/components/Analysis/EngineAnalysis.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { stockfishService } from '../../services/stockfish.service';
 import { useChess } from '../../context/chessContext';
 
@@ -8,7 +7,9 @@ function EngineAnalysis() {
     const [analysis, setAnalysis] = useState(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [depth, setDepth] = useState(20);
+    const prevFen = useRef(null); // Prevents redundant analysis
 
+    // Initialize Stockfish
     useEffect(() => {
         const initEngine = async () => {
             try {
@@ -17,21 +18,23 @@ function EngineAnalysis() {
                 console.error('Failed to initialize engine:', error);
             }
         };
-
         initEngine();
         return () => stockfishService.quit();
     }, []);
 
+    // Analyze position when FEN or depth changes
     useEffect(() => {
-        if (state.game && !isAnalyzing) {
-            analyzeCurrentPosition();
+        const fen = state.game?.fen();
+        if (fen && fen !== prevFen.current && !isAnalyzing) {
+            prevFen.current = fen;
+            analyzeCurrentPosition(fen);
         }
-    }, [state.game.fen()]);
+    }, [state.game, depth]);
 
-    const analyzeCurrentPosition = async () => {
+    const analyzeCurrentPosition = async (fen) => {
         setIsAnalyzing(true);
         try {
-            const result = await stockfishService.analyzePosition(state.game.fen(), depth);
+            const result = await stockfishService.analyzePosition(fen, depth);
             setAnalysis(result);
         } catch (error) {
             console.error('Analysis error:', error);
@@ -53,23 +56,17 @@ function EngineAnalysis() {
 
     if (!analysis) {
         return (
-            <div className="bg-gray-800 rounded-lg p-4">
-                <div className="animate-pulse flex space-x-4">
-                    <div className="flex-1 space-y-4 py-1">
-                        <div className="h-4 bg-gray-700 rounded w-3/4"></div>
-                        <div className="space-y-2">
-                            <div className="h-4 bg-gray-700 rounded"></div>
-                            <div className="h-4 bg-gray-700 rounded w-5/6"></div>
-                        </div>
-                    </div>
-                </div>
+            <div className="bg-gray-800 rounded-lg p-4 animate-pulse space-y-4">
+                <div className="h-4 bg-gray-700 rounded w-3/4"></div>
+                <div className="h-4 bg-gray-700 rounded w-5/6"></div>
+                <div className="h-4 bg-gray-700 rounded w-1/2"></div>
             </div>
         );
     }
 
     return (
         <div className="bg-gray-800 rounded-lg p-4">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-2">
                 <h3 className="text-white text-lg font-semibold">Engine Analysis</h3>
                 <div className="flex items-center gap-2">
                     <label className="text-gray-400 text-sm">Depth:</label>
@@ -86,23 +83,19 @@ function EngineAnalysis() {
             </div>
 
             <div className="space-y-4">
-                {/* Current Evaluation */}
-                <div className="bg-gray-700/50 p-3 rounded-lg">
-                    <div className="flex justify-between items-center">
-                        <span className="text-gray-400">Current Evaluation:</span>
-                        <span className={`font-mono font-bold ${analysis.evaluation >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {formatEvaluation(analysis.evaluation)}
-                        </span>
-                    </div>
+                {/* Evaluation */}
+                <div className="bg-gray-700/50 p-3 rounded-lg flex justify-between items-center">
+                    <span className="text-gray-400">Current Evaluation:</span>
+                    <span className={`font-mono font-bold ${analysis.evaluation >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {formatEvaluation(analysis.evaluation)}
+                    </span>
                 </div>
 
                 {/* Best Move */}
                 <div className="bg-gray-700/50 p-3 rounded-lg">
                     <div className="flex justify-between items-center mb-2">
                         <span className="text-gray-400">Best Move:</span>
-                        <span className="text-white font-mono">
-                            {analysis.bestMove?.move}
-                        </span>
+                        <span className="text-white font-mono">{analysis.bestMove?.move}</span>
                     </div>
                     {analysis.bestMove?.ponder && (
                         <div className="text-sm text-gray-500">
@@ -117,9 +110,7 @@ function EngineAnalysis() {
                     {analysis.topMoves.map((move, index) => (
                         <div key={index} className="bg-gray-700/50 p-3 rounded-lg">
                             <div className="flex justify-between items-center mb-1">
-                                <span className="text-white font-mono">
-                                    {move.sequence[0]}
-                                </span>
+                                <span className="text-white font-mono">{move.sequence[0]}</span>
                                 <span className={`font-mono ${move.evaluation >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                     {formatEvaluation(move.evaluation)}
                                 </span>
@@ -131,7 +122,7 @@ function EngineAnalysis() {
                     ))}
                 </div>
 
-                {/* Analysis Depth */}
+                {/* Depth */}
                 <div className="text-right text-sm text-gray-500">
                     Analysis depth: {analysis.depth}
                 </div>

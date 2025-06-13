@@ -3,14 +3,10 @@ import React from 'react';
 import { identifyOpening } from '../../../Data/openings';
 
 function MoveQualityChart({ analyses }) {
-    // Track all moves in order
     const allMoves = analyses.map(move => move.move);
-
-    // Separate analyses for white and black
     const whiteAnalyses = analyses.filter(move => move.color === 'w');
     const blackAnalyses = analyses.filter(move => move.color === 'b');
 
-    // Calculate stats for each side
     const getStats = (moves) => {
         const stats = {
             brilliant: 0,
@@ -23,34 +19,25 @@ function MoveQualityChart({ analyses }) {
         };
 
         moves.forEach((move, moveIndex) => {
-            // Check for book moves (only in first 10 moves)
             if (moveIndex < 10) {
                 const openingSequence = allMoves.slice(0, moveIndex + 1);
                 const opening = identifyOpening(openingSequence);
+                const openingMoves = opening?.moves || opening?.sequence || [];
 
-                // Only count as book move if it matches a complete opening sequence
-                if (opening) {
-                    // Get the opening moves from the opening object
-                    const openingMoves = opening.moves || opening.sequence || [];
-                    if (openingMoves.length === openingSequence.length) {
-                        stats.book++;
-                        return; // Skip other classifications for book moves
-                    }
+                if (opening && openingMoves.length === openingSequence.length) {
+                    stats.book++;
+                    return;
                 }
             }
 
-            // Check for checkmate
             if (move.move?.includes('#')) {
                 stats.brilliant++;
                 return;
             }
 
             const evalChange = move.evalChange;
-
-            // If no evalChange, skip
             if (!evalChange && evalChange !== 0) return;
 
-            // Classify other moves
             if (evalChange > 5 && !move.captured && !move.forced) {
                 stats.brilliant++;
             } else if (evalChange > 1.5) {
@@ -58,7 +45,7 @@ function MoveQualityChart({ analyses }) {
             } else if (evalChange > 0.8) {
                 stats.good++;
             } else if (evalChange > -0.5) {
-                // Neutral moves not counted
+                // Neutral
             } else if (evalChange > -1.5) {
                 stats.inaccuracy++;
             } else if (evalChange > -3.0) {
@@ -70,27 +57,18 @@ function MoveQualityChart({ analyses }) {
 
         const accuracy = moves.reduce((sum, move) => {
             if (move.move?.includes('#')) return sum + 100;
-
             const evalChange = move.evalChange;
             if (!evalChange && evalChange !== 0) return sum;
 
-            // Capture evaluation
             if (move.captured) {
-                const pieceValues = {
-                    'p': 1, 'n': 3, 'b': 3, 'r': 5, 'q': 9, 'k': 0
-                };
-                const capturingPieceValue = pieceValues[move.piece?.toLowerCase()] || 0;
-                const capturedPieceValue = pieceValues[move.captured?.toLowerCase()] || 0;
-                const valueDifference = capturedPieceValue - capturingPieceValue;
+                const pieceValues = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+                const capturing = pieceValues[move.piece?.toLowerCase()] || 0;
+                const captured = pieceValues[move.captured?.toLowerCase()] || 0;
+                const diff = captured - capturing;
 
-                if (valueDifference > 0) {
-                    return sum + (95 + Math.min(5, valueDifference));
-                } else if (valueDifference === 0) {
-                    return sum + (evalChange >= 0 ? 85 : 70);
-                }
+                if (diff > 0) return sum + (95 + Math.min(5, diff));
+                if (diff === 0) return sum + (evalChange >= 0 ? 85 : 70);
             }
-
-            // Skip accuracy points for book moves (handled separately)
 
             if (evalChange > 5 && !move.captured && !move.forced) return sum + 100;
             if (evalChange > 1.5) return sum + 90;
@@ -103,7 +81,6 @@ function MoveQualityChart({ analyses }) {
         }, 0) / (moves.length || 1);
 
         return { ...stats, accuracy };
-
     };
 
     const whiteStats = getStats(whiteAnalyses);
@@ -120,21 +97,21 @@ function MoveQualityChart({ analyses }) {
     ];
 
     return (
-        <div className="bg-[#25262b] rounded-2xl p-6 shadow-xl">
-            <h2 className="text-xl font-bold text-white mb-6">Move Quality Analysis</h2>
+        <div className="bg-[#25262b] rounded-2xl p-4 sm:p-6 shadow-xl w-full">
+            <h2 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">Move Quality Analysis</h2>
 
             {/* Accuracy Header */}
-            <div className="flex justify-between mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-0 mb-6">
                 <div className="text-center">
                     <div className="text-gray-400 text-sm">White</div>
-                    <div className="text-2xl font-bold text-white">
+                    <div className="text-xl sm:text-2xl font-bold text-white">
                         {whiteStats.accuracy.toFixed(1)}
                     </div>
                 </div>
-                <div className="text-gray-400 text-lg font-semibold">Accuracy</div>
+                <div className="text-gray-400 text-base sm:text-lg font-semibold">Accuracy</div>
                 <div className="text-center">
                     <div className="text-gray-400 text-sm">Black</div>
-                    <div className="text-2xl font-bold text-white">
+                    <div className="text-xl sm:text-2xl font-bold text-white">
                         {blackStats.accuracy.toFixed(1)}
                     </div>
                 </div>
@@ -145,14 +122,14 @@ function MoveQualityChart({ analyses }) {
                 {moveCategories.map((category) => (
                     <div
                         key={category.name}
-                        className="grid grid-cols-3 items-center py-2 border-b border-gray-700/50"
+                        className="grid grid-cols-3 items-center py-2 border-b border-gray-700/50 text-sm sm:text-base"
                     >
                         <div className="text-center text-white">
                             {whiteStats[category.name.toLowerCase()]}
                         </div>
                         <div className={`flex items-center justify-center gap-2 ${category.bgColor} py-1 rounded`}>
-                            <span className={`${category.color} text-xl`}>{category.icon}</span>
-                            <span className="text-gray-300 text-sm">{category.name}</span>
+                            <span className={`${category.color} text-base sm:text-xl`}>{category.icon}</span>
+                            <span className="text-gray-300 text-sm sm:text-base">{category.name}</span>
                         </div>
                         <div className="text-center text-white">
                             {blackStats[category.name.toLowerCase()]}
@@ -163,4 +140,5 @@ function MoveQualityChart({ analyses }) {
         </div>
     );
 }
+
 export default MoveQualityChart;

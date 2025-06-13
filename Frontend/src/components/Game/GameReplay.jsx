@@ -34,16 +34,12 @@ function GameReplay() {
     });
 
     useEffect(() => {
-        // Check if game data was passed
         if (!location.state?.importedGame) {
             navigate('/');
             return;
         }
 
-        // Use metadata from the imported game
         const metadata = location.state.importedGame.metadata || {};
-
-        // Merge extracted metadata with default values
         const mergedMetadata = {
             Event: metadata.Event || 'Unknown Event',
             Site: metadata.Site || 'Unknown Site',
@@ -58,48 +54,29 @@ function GameReplay() {
             ECO: metadata.ECO || 'N/A'
         };
 
-        // Set the metadata
         setGameMetadata(mergedMetadata);
-
-        // Initialize game with moves
         const newGame = new Chess();
-        location.state.importedGame.moves.forEach(move => {
-            newGame.move(move);
-        });
-
+        location.state.importedGame.moves.forEach(move => newGame.move(move));
         setGame(newGame);
         setGameHistory(location.state.importedGame.moves);
     }, [location.state, navigate]);
 
-    // Determine game outcome description
     const getGameOutcomeDescription = () => {
         switch (gameMetadata.Result) {
-            case '1-0':
-                return `White won the game`;
-            case '0-1':
-                return `Black won the game`;
-            case '1/2-1/2':
-                return "Game ended in a draw";
-            default:
-                return "Game result unknown";
+            case '1-0': return `White won the game`;
+            case '0-1': return `Black won the game`;
+            case '1/2-1/2': return "Game ended in a draw";
+            default: return "Game result unknown";
         }
     };
 
-    // Determine termination reason
     const getTerminationReason = () => {
-        if (gameMetadata.Termination && gameMetadata.Termination !== 'N/A') {
-            return gameMetadata.Termination;
-        }
-
+        if (gameMetadata.Termination && gameMetadata.Termination !== 'N/A') return gameMetadata.Termination;
         switch (gameMetadata.Result) {
-            case '1-0':
-                return "White wins";
-            case '0-1':
-                return "Black wins";
-            case '1/2-1/2':
-                return "Draw";
-            default:
-                return "Game outcome not specified";
+            case '1-0': return "White wins";
+            case '0-1': return "Black wins";
+            case '1/2-1/2': return "Draw";
+            default: return "Game outcome not specified";
         }
     };
 
@@ -115,9 +92,7 @@ function GameReplay() {
     const handlePreviousMove = () => {
         if (currentMove > 0) {
             const newGame = new Chess();
-            gameHistory.slice(0, currentMove - 1).forEach(move => {
-                newGame.move(move);
-            });
+            gameHistory.slice(0, currentMove - 1).forEach(move => newGame.move(move));
             setGame(newGame);
             setCurrentMove(prev => prev - 1);
         }
@@ -139,12 +114,11 @@ function GameReplay() {
                     Game Details
                 </h3>
 
-                {/* Game Outcome */}
                 <div className="bg-[#25262b] rounded p-3">
-                    <div className="flex items-center">
-                        <TrophyIcon className="h-5 w-5 mr-2 text-yellow-400" />
+                    <div className="flex items-center flex-wrap gap-2">
+                        <TrophyIcon className="h-5 w-5 text-yellow-400" />
                         <span className="text-white font-medium">Result:</span>
-                        <span className="ml-2 text-gray-300">
+                        <span className="text-gray-300">
                             {gameMetadata.Result || 'N/A'} - {getGameOutcomeDescription()}
                         </span>
                     </div>
@@ -153,48 +127,44 @@ function GameReplay() {
                     </div>
                 </div>
 
-                {/* Player Information */}
-                <div className="grid md:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <div className="bg-[#25262b] rounded p-3">
-                        <div className="flex items-center">
-                            <UserIcon className="h-5 w-5 mr-2 text-white" />
+                        <div className="flex items-center gap-2">
+                            <UserIcon className="h-5 w-5 text-white" />
                             <span className="text-gray-400">White Player:</span>
                         </div>
                         <div className="text-white font-semibold">
-                            {gameMetadata.White || 'Unknown'}
-                            {gameMetadata.WhiteElo && ` (${gameMetadata.WhiteElo})`}
+                            {gameMetadata.White || 'Unknown'} {gameMetadata.WhiteElo && `(${gameMetadata.WhiteElo})`}
                         </div>
                     </div>
                     <div className="bg-[#25262b] rounded p-3">
-                        <div className="flex items-center">
-                            <UserIcon className="h-5 w-5 mr-2 text-blue-500" />
+                        <div className="flex items-center gap-2">
+                            <UserIcon className="h-5 w-5 text-blue-500" />
                             <span className="text-gray-400">Black Player:</span>
                         </div>
                         <div className="text-white font-semibold">
-                            {gameMetadata.Black || 'Unknown'}
-                            {gameMetadata.BlackElo && ` (${gameMetadata.BlackElo})`}
+                            {gameMetadata.Black || 'Unknown'} {gameMetadata.BlackElo && `(${gameMetadata.BlackElo})`}
                         </div>
                     </div>
                 </div>
 
-                {/* Additional Game Information */}
-                <div className="grid md:grid-cols-3 gap-2">
-                    <div className="bg-[#25262b] rounded p-3 flex items-center">
-                        <CalendarIcon className="h-5 w-5 mr-2 text-green-400" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                    <div className="bg-[#25262b] rounded p-3 flex items-start gap-2">
+                        <CalendarIcon className="h-5 w-5 text-green-400" />
                         <div>
                             <span className="text-gray-400 text-sm">Date</span>
                             <div className="text-white">{gameMetadata.Date || 'N/A'}</div>
                         </div>
                     </div>
-                    <div className="bg-[#25262b] rounded p-3 flex items-center">
-                        <MapPinIcon className="h-5 w-5 mr-2 text-red-400" />
+                    <div className="bg-[#25262b] rounded p-3 flex items-start gap-2">
+                        <MapPinIcon className="h-5 w-5 text-red-400" />
                         <div>
                             <span className="text-gray-400 text-sm">Event</span>
                             <div className="text-white">{gameMetadata.Event || 'N/A'}</div>
                         </div>
                     </div>
-                    <div className="bg-[#25262b] rounded p-3 flex items-center">
-                        <InformationCircleIcon className="h-5 w-5 mr-2 text-purple-400" />
+                    <div className="bg-[#25262b] rounded p-3 flex items-start gap-2">
+                        <InformationCircleIcon className="h-5 w-5 text-purple-400" />
                         <div>
                             <span className="text-gray-400 text-sm">Time Control</span>
                             <div className="text-white">{gameMetadata.TimeControl || 'N/A'}</div>
@@ -202,7 +172,6 @@ function GameReplay() {
                     </div>
                 </div>
 
-                {/* Debug Information */}
                 <div className="bg-[#25262b] rounded p-3">
                     <details>
                         <summary className="text-gray-400 cursor-pointer">
@@ -217,14 +186,13 @@ function GameReplay() {
         );
     };
 
-
     if (!game) return <div>Loading...</div>;
 
     return (
         <DndProvider backend={HTML5Backend}>
-            <div className="min-h-screen bg-[#1a1b1e] p-6">
+            <div className="min-h-screen bg-[#1a1b1e] p-4 sm:p-6">
                 <div className="container mx-auto">
-                    <div className="flex justify-between items-center mb-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                         <h1 className="text-2xl font-bold text-white">Game Replay</h1>
                         <button
                             onClick={() => navigate('/analysis', {
@@ -236,53 +204,41 @@ function GameReplay() {
                         </button>
                     </div>
 
-                    <div className="grid md:grid-cols-3 gap-6">
-                        {/* Board Section */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="md:col-span-2 space-y-6">
-                            <div className="bg-[#25262b] rounded-2xl p-6">
+                            <div className="bg-[#25262b] rounded-2xl p-4 sm:p-6">
                                 <Board
                                     position={game.fen()}
                                     orientation="white"
                                     onPieceDrop={() => { }}
                                 />
 
-                                {/* Move Navigation */}
-                                <div className="flex justify-center mt-6 space-x-4">
+                                <div className="flex flex-col sm:flex-row justify-center mt-6 gap-2 sm:gap-4">
                                     <button
                                         onClick={handlePreviousMove}
                                         disabled={currentMove === 0}
                                         className="bg-gray-700 text-white px-4 py-2 rounded disabled:opacity-50"
-                                    >
-                                        Previous
-                                    </button>
+                                    >Previous</button>
                                     <button
                                         onClick={handleResetGame}
                                         className="bg-gray-700 text-white px-4 py-2 rounded"
-                                    >
-                                        Reset
-                                    </button>
+                                    >Reset</button>
                                     <button
                                         onClick={handleNextMove}
                                         disabled={currentMove >= gameHistory.length}
                                         className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
-                                    >
-                                        Next
-                                    </button>
+                                    >Next</button>
                                 </div>
                             </div>
 
-                            {/* Move List Section */}
-                            <div className="bg-[#25262b] rounded-2xl p-6">
+                            <div className="bg-[#25262b] rounded-2xl p-4 sm:p-6">
                                 <h2 className="text-white text-xl font-semibold mb-4">Move List</h2>
-                                <div className="max-h-[600px] overflow-y-auto">
-                                    <MoveNotation
-                                        moves={gameHistory.slice(0, currentMove)}
-                                    />
+                                <div className="max-h-[400px] overflow-y-auto">
+                                    <MoveNotation moves={gameHistory.slice(0, currentMove)} />
                                 </div>
                             </div>
                         </div>
 
-                        {/* Metadata Section */}
                         <div className="md:col-span-1">
                             {renderMetadataSection()}
                         </div>

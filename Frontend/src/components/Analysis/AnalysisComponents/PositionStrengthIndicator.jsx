@@ -20,8 +20,8 @@ function PositionStrengthIndicator({ evaluation, winChance }) {
     };
 
     return (
-        <div className="bg-gray-700 rounded-lg p-4">
-            <h3 className="text-white text-lg font-semibold mb-4">Position Strength</h3>
+        <div className="bg-gray-700 rounded-2xl p-4 sm:p-6 w-full shadow-lg">
+            <h3 className="text-white text-lg sm:text-xl font-semibold mb-4">Position Strength</h3>
 
             {/* Evaluation Bar */}
             <div className="relative h-4 bg-gray-600 rounded-full mb-4">
@@ -34,38 +34,29 @@ function PositionStrengthIndicator({ evaluation, winChance }) {
             </div>
 
             {/* Numerical Evaluation */}
-            <div className="flex justify-between items-center mb-4">
-                <span className="text-white">Evaluation:</span>
-                <span className={`font-bold ${evaluation > 0 ? 'text-green-400' : 'text-red-400'}`}>
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1 sm:gap-2 mb-4">
+                <span className="text-white text-sm sm:text-base">Evaluation:</span>
+                <span className={`font-bold text-sm sm:text-base ${evaluation > 0 ? 'text-green-400' : 'text-red-400'}`}>
                     {evaluation > 0 ? '+' : ''}{evaluation.toFixed(1)}
                 </span>
             </div>
 
             {/* Win Chance */}
-            <div className="bg-gray-800 rounded p-3">
-                <div className="flex justify-between items-center mb-2">
-                    <span className="text-white">Win Chance:</span>
-                    <span className="text-blue-400 font-bold">{winChance}%</span>
+            <div className="bg-gray-800 rounded-lg p-3 mb-4">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1 sm:gap-2 mb-2">
+                    <span className="text-white text-sm sm:text-base">Win Chance:</span>
+                    <span className="text-blue-400 font-bold text-sm sm:text-base">{winChance}%</span>
                 </div>
-                <div className="text-gray-300 text-sm">
+                <div className="text-gray-300 text-xs sm:text-sm">
                     {getWinChanceText(winChance)}
                 </div>
             </div>
 
             {/* Position Features */}
-            <div className="mt-4 space-y-2">
-                <PositionFeature
-                    label="King Safety"
-                    value={calculateKingSafety()}
-                />
-                <PositionFeature
-                    label="Piece Activity"
-                    value={calculatePieceActivity()}
-                />
-                <PositionFeature
-                    label="Pawn Structure"
-                    value={calculatePawnStructure()}
-                />
+            <div className="mt-4 space-y-3">
+                <PositionFeature label="King Safety" value={calculateKingSafety()} />
+                <PositionFeature label="Piece Activity" value={calculatePieceActivity()} />
+                <PositionFeature label="Pawn Structure" value={calculatePawnStructure()} />
             </div>
         </div>
     );
@@ -73,10 +64,10 @@ function PositionStrengthIndicator({ evaluation, winChance }) {
 
 function PositionFeature({ label, value }) {
     return (
-        <div className="bg-gray-800 rounded p-2">
+        <div className="bg-gray-800 rounded-lg p-2">
             <div className="flex justify-between items-center">
-                <span className="text-white text-sm">{label}</span>
-                <div className="w-24 h-2 bg-gray-600 rounded-full">
+                <span className="text-white text-xs sm:text-sm">{label}</span>
+                <div className="w-24 h-2 bg-gray-600 rounded-full ml-2">
                     <div
                         className="h-full bg-blue-500 rounded-full"
                         style={{ width: `${value}%` }}

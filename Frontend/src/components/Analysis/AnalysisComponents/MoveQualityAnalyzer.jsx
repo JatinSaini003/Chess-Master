@@ -1,21 +1,13 @@
 // src/components/Analysis/AnalysisComponents/MoveQualityAnalyzer.jsx
+
 export default function MoveQualityAnalyzer({ analyses }) {
     const latestMove = analyses[analyses.length - 1];
-
     const analyzeMoveQuality = (move) => {
-        // Piece values for capture evaluation
-        const pieceValues = {
-            'p': 1, 'n': 3, 'b': 3, 'r': 5, 'q': 9, 'k': 0
-        };
-
-
-        // Determine if white won
+        const pieceValues = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
         const isWhiteWin = move.isCheckmate && move.color === 'w';
         const isBlackWin = move.isCheckmate && move.color === 'b';
-
         const evalChange = move.evalChange;
 
-        // Evaluate captures
         const evaluateCapture = () => {
             if (!move.captured) return null;
             const capturingPieceValue = pieceValues[move.piece?.toLowerCase()] || 0;
@@ -23,16 +15,13 @@ export default function MoveQualityAnalyzer({ analyses }) {
             return capturedPieceValue - capturingPieceValue;
         };
 
-        // Calculate accuracy and quality - matching MoveAccuracy logic
         let accuracy, quality, description;
-
         if (move.isCheckmate || move.san?.includes('#')) {
             accuracy = 100;
             quality = 'Brilliant';
             description = 'Checkmate!';
         } else {
             const captureValue = evaluateCapture();
-
             if (captureValue !== null) {
                 if (captureValue > 0) {
                     accuracy = 95 + Math.min(5, captureValue);
@@ -48,7 +37,6 @@ export default function MoveQualityAnalyzer({ analyses }) {
                     description = `Losing ${Math.abs(captureValue)} points of material`;
                 }
             } else {
-                // Non-capture moves - match MoveAccuracy calculation
                 if (evalChange >= 0) {
                     accuracy = 100;
                     quality = evalChange >= 2 ? 'Brilliant' : 'Great';
@@ -60,38 +48,30 @@ export default function MoveQualityAnalyzer({ analyses }) {
                 } else {
                     accuracy = Math.max(0, 100 + (evalChange * 20));
                     if (accuracy >= 90) {
-                        quality = 'Great';
-                        description = 'Strong positional play';
+                        quality = 'Great'; description = 'Strong positional play';
                     } else if (accuracy >= 80) {
-                        quality = 'Good';
-                        description = 'Solid move';
+                        quality = 'Good'; description = 'Solid move';
                     } else if (accuracy >= 70) {
-                        quality = 'Book';
-                        description = 'Standard move';
+                        quality = 'Book'; description = 'Standard move';
                     } else if (accuracy >= 60) {
-                        quality = 'Inaccuracy';
-                        description = 'Slightly imprecise';
+                        quality = 'Inaccuracy'; description = 'Slightly imprecise';
                     } else if (accuracy >= 40) {
-                        quality = 'Mistake';
-                        description = 'Missed better continuation';
+                        quality = 'Mistake'; description = 'Missed better continuation';
                     } else {
-                        quality = 'Blunder';
-                        description = 'Serious mistake';
+                        quality = 'Blunder'; description = 'Serious mistake';
                     }
                 }
             }
         }
 
-        // Calculate factors for both sides
+        const factorCalc = (modifier, cond) => move.color === cond ? modifier : -modifier;
         const factors = {
             material: {
-                white: -evalChange,
-                black: evalChange,
-                description: 'Material Balance'
+                white: -evalChange, black: evalChange, description: 'Material Balance'
             },
             position: {
-                white: move.color === 'w' ? Math.abs(evalChange * 0.5) : -Math.abs(evalChange * 0.5),
-                black: move.color === 'b' ? Math.abs(evalChange * 0.5) : -Math.abs(evalChange * 0.5),
+                white: factorCalc(Math.abs(evalChange * 0.5), 'w'),
+                black: factorCalc(Math.abs(evalChange * 0.5), 'b'),
                 description: 'Position Strength'
             },
             kingSafety: {
@@ -100,55 +80,46 @@ export default function MoveQualityAnalyzer({ analyses }) {
                 description: 'King Safety'
             },
             pawnStructure: {
-                white: move.color === 'w' ? (move.piece === 'p' ? evalChange * 0.3 : 0) : -(move.piece === 'p' ? evalChange * 0.3 : 0),
-                black: move.color === 'b' ? (move.piece === 'p' ? evalChange * 0.3 : 0) : -(move.piece === 'p' ? evalChange * 0.3 : 0),
+                white: factorCalc(move.piece === 'p' ? evalChange * 0.3 : 0, 'w'),
+                black: factorCalc(move.piece === 'p' ? evalChange * 0.3 : 0, 'b'),
                 description: 'Pawn Structure'
             },
             mobility: {
-                white: move.color === 'w' ? Math.abs(evalChange * 0.4) : -Math.abs(evalChange * 0.4),
-                black: move.color === 'b' ? Math.abs(evalChange * 0.4) : -Math.abs(evalChange * 0.4),
+                white: factorCalc(Math.abs(evalChange * 0.4), 'w'),
+                black: factorCalc(Math.abs(evalChange * 0.4), 'b'),
                 description: 'Piece Mobility'
             },
             control: {
-                white: move.color === 'w' ? Math.abs(evalChange * 0.3) : -Math.abs(evalChange * 0.3),
-                black: move.color === 'b' ? Math.abs(evalChange * 0.3) : -Math.abs(evalChange * 0.3),
+                white: factorCalc(Math.abs(evalChange * 0.3), 'w'),
+                black: factorCalc(Math.abs(evalChange * 0.3), 'b'),
                 description: 'Board Control'
             }
         };
 
-        // Calculate overall position
         const overallPosition = {
             white: Object.values(factors).reduce((sum, factor) => sum + factor.white, 0),
             black: Object.values(factors).reduce((sum, factor) => sum + factor.black, 0)
         };
 
-        // Special case for checkmate
         if (move.isCheckmate || move.san?.includes('#')) {
-            const checkmateValue = 5; // High positive value for checkmate
+            const val = 5;
+            const updateSide = (side, mult) => {
+                Object.keys(factors).forEach(key => {
+                    factors[key][side] = val * mult;
+                });
+                overallPosition[side] = val * Object.keys(factors).length * mult;
+            };
             if (move.color === 'w') {
-                Object.keys(factors).forEach(key => {
-                    factors[key].white = checkmateValue;
-                    factors[key].black = -checkmateValue;
-                });
-                overallPosition.white = checkmateValue * Object.keys(factors).length;
-                overallPosition.black = -checkmateValue * Object.keys(factors).length;
+                updateSide('white', 1); updateSide('black', -1);
             } else {
-                Object.keys(factors).forEach(key => {
-                    factors[key].white = -checkmateValue;
-                    factors[key].black = checkmateValue;
-                });
-                overallPosition.white = -checkmateValue * Object.keys(factors).length;
-                overallPosition.black = checkmateValue * Object.keys(factors).length;
+                updateSide('white', -1); updateSide('black', 1);
             }
         }
 
         return { quality, accuracy, factors, overallPosition, description, isWhiteWin, isBlackWin };
     };
 
-
-
     if (!latestMove) return null;
-
     const analysis = analyzeMoveQuality(latestMove);
 
     const getQualityColor = (quality) => {
@@ -166,130 +137,66 @@ export default function MoveQualityAnalyzer({ analyses }) {
 
     return (
         <div className="space-y-6 p-4 bg-gray-800/30 rounded-xl">
-            {/* Move Quality Header */}
+            {/* Header */}
             <div className={`${getQualityColor(analysis.quality)} p-4 rounded-lg`}>
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex flex-col sm:flex-row items-center justify-between mb-2">
                     <span className="text-lg font-bold">{analysis.quality}</span>
-                    <span className="text-sm font-medium">
-                        Accuracy: {analysis.accuracy.toFixed(1)}%
-                    </span>
+                    <span className="text-sm font-medium">Accuracy: {analysis.accuracy.toFixed(1)}%</span>
                 </div>
                 <p className="text-sm text-gray-300">{analysis.description}</p>
             </div>
 
-            {/* Position Analysis - Side by Side */}
+            {/* Position Analysis */}
             <div className="space-y-4">
-                <h3 className="text-white text-sm font-semibold mb-4">Position Analysis</h3>
-                <div className="grid grid-cols-2 gap-4">
-
-                    {/* White's Side */}
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2 mb-4">
-                            <div className="w-3 h-3 rounded-full bg-white"></div>
-                            <h4 className="text-white font-semibold">White</h4>
-                        </div>
-                        {Object.entries(analysis.factors).map(([key, factor]) => (
-                            <div key={`white-${key}`}
-                                className="bg-gray-800/50 p-3 rounded-lg hover:bg-gray-700/50 transition-colors">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-gray-400 text-sm">
-                                        {factor.description}
-                                    </span>
-                                    <span className={`font-mono text-sm ${analysis.isWhiteWin ? 'text-green-400' :
-                                        analysis.isBlackWin ? 'text-red-400' :
-                                            factor.white > 0 ? 'text-green-400' :
-                                                factor.white < 0 ? 'text-red-400' :
-                                                    'text-gray-400'
-                                        }`}>
-                                        {analysis.isWhiteWin || factor.white > 0 ? '+' : ''}
-                                        {factor.white.toFixed(2)}
-                                    </span>
-                                </div>
-                                <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                                    <div
-                                        className={`h-full transition-all duration-300 ${analysis.isWhiteWin ? 'bg-green-400' :
-                                            analysis.isBlackWin ? 'bg-red-400' :
-                                                factor.white > 0 ? 'bg-green-400' :
-                                                    factor.white < 0 ? 'bg-red-400' :
-                                                        'bg-gray-400'
-                                            }`}
-                                        style={{
-                                            width: `${Math.min(100, Math.abs(factor.white * 20) + 50)}%`
-                                        }}
-                                    />
-                                </div>
+                <h3 className="text-white text-sm font-semibold mb-2">Position Analysis</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* White and Black Side reused here – unchanged layout logic */}
+                    {['white', 'black'].map((side, i) => (
+                        <div key={side} className="space-y-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className={`w-3 h-3 rounded-full ${side === 'white' ? 'bg-white' : 'bg-blue-500'}`}></div>
+                                <h4 className="text-white font-semibold">{side[0].toUpperCase() + side.slice(1)}</h4>
                             </div>
-                        ))}
-                    </div>
-
-                    {/* Black's Side */}
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2 mb-4">
-                            <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                            <h4 className="text-white font-semibold">Black</h4>
+                            {Object.entries(analysis.factors).map(([key, factor]) => {
+                                const value = factor[side];
+                                const isWin = (side === 'white' && analysis.isWhiteWin) || (side === 'black' && analysis.isBlackWin);
+                                return (
+                                    <div key={`${side}-${key}`} className="bg-gray-800/50 p-3 rounded-lg hover:bg-gray-700/50 transition">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-gray-400 text-sm">{factor.description}</span>
+                                            <span className={`font-mono text-sm ${isWin ? 'text-green-400' :
+                                                value > 0 ? 'text-green-400' :
+                                                    value < 0 ? 'text-red-400' : 'text-gray-400'}`}>
+                                                {isWin || value > 0 ? '+' : ''}{value.toFixed(2)}
+                                            </span>
+                                        </div>
+                                        <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                                            <div className={`h-full transition-all duration-300 ${isWin ? 'bg-green-400' :
+                                                value > 0 ? 'bg-green-400' :
+                                                    value < 0 ? 'bg-red-400' : 'bg-gray-400'}`}
+                                                style={{ width: `${Math.min(100, Math.abs(value * 20) + 50)}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
-                        {Object.entries(analysis.factors).map(([key, factor]) => (
-                            <div key={`black-${key}`}
-                                className="bg-gray-800/50 p-3 rounded-lg hover:bg-gray-700/50 transition-colors">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-gray-400 text-sm">
-                                        {factor.description}
-                                    </span>
-                                    <span className={`font-mono text-sm ${analysis.isBlackWin ? 'text-green-400' :
-                                        analysis.isWhiteWin ? 'text-red-400' :
-                                            factor.black > 0 ? 'text-green-400' :
-                                                factor.black < 0 ? 'text-red-400' :
-                                                    'text-gray-400'
-                                        }`}>
-                                        {analysis.isBlackWin || factor.black > 0 ? '+' : ''}
-                                        {factor.black.toFixed(2)}
-                                    </span>
-                                </div>
-                                <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                                    <div
-                                        className={`h-full transition-all duration-300 ${analysis.isBlackWin ? 'bg-green-400' :
-                                            analysis.isWhiteWin ? 'bg-red-400' :
-                                                factor.black > 0 ? 'bg-green-400' :
-                                                    factor.black < 0 ? 'bg-red-400' :
-                                                        'bg-gray-400'
-                                            }`}
-                                        style={{
-                                            width: `${Math.min(100, Math.abs(factor.black * 20) + 50)}%`
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    ))}
                 </div>
 
-                {/* Comparison Summary */}
+                {/* Summary */}
                 <div className="mt-6 p-4 bg-gray-800/50 rounded-lg">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="text-center">
-                            <span className="text-gray-400 text-sm">Overall Position</span>
-                            <div className={`text-lg font-bold mt-1 ${analysis.isWhiteWin ? 'text-green-400' :
-                                analysis.isBlackWin ? 'text-red-400' :
-                                    analysis.overallPosition.white > 0 ? 'text-green-400' :
-                                        analysis.overallPosition.white < 0 ? 'text-red-400' :
-                                            'text-gray-400'
-                                }`}>
-                                {(analysis.isWhiteWin || analysis.overallPosition.white > 0) ? '+' : ''}
-                                {analysis.overallPosition.white.toFixed(2)}
+                    <div className="grid grid-cols-2 sm:grid-cols-2 gap-4 text-center">
+                        {['white', 'black'].map((side) => (
+                            <div key={side}>
+                                <span className="text-gray-400 text-sm">Overall Position</span>
+                                <div className={`text-lg font-bold mt-1 ${analysis[`is${side[0].toUpperCase() + side.slice(1)}Win`] ? 'text-green-400' :
+                                    analysis.overallPosition[side] > 0 ? 'text-green-400' :
+                                        analysis.overallPosition[side] < 0 ? 'text-red-400' : 'text-gray-400'}`}>
+                                    {(analysis.overallPosition[side] > 0 ? '+' : '') + analysis.overallPosition[side].toFixed(2)}
+                                </div>
                             </div>
-                        </div>
-                        <div className="text-center">
-                            <span className="text-gray-400 text-sm">Overall Position</span>
-                            <div className={`text-lg font-bold mt-1 ${analysis.isBlackWin ? 'text-green-400' :
-                                analysis.isWhiteWin ? 'text-red-400' :
-                                    analysis.overallPosition.black > 0 ? 'text-green-400' :
-                                        analysis.overallPosition.black < 0 ? 'text-red-400' :
-                                            'text-gray-400'
-                                }`}>
-                                {(analysis.isBlackWin || analysis.overallPosition.black > 0) ? '+' : ''}
-                                {analysis.overallPosition.black.toFixed(2)}
-                            </div>
-                        </div>
+                        ))}
                     </div>
                 </div>
             </div>

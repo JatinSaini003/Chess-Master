@@ -1,4 +1,3 @@
-// src/components/Analysis/EvaluationBar.jsx
 import React from 'react';
 import { Chess } from 'chess.js';
 import { EvaluationService } from '../../services/evaluation.service';
@@ -48,10 +47,10 @@ function EvaluationBar({ position }) {
     };
 
     return (
-        <div className="relative w-6 h-full bg-gray-800 mr-2">
+        <div className="relative w-6 sm:w-6 h-full min-h-[180px] bg-gray-800 mr-2 rounded">
             {/* Evaluation number */}
             <div
-                className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-white z-10 bg-gray-800 px-1 py-0.5 rounded"
+                className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs sm:text-xs text-white z-10 bg-gray-800 px-1 py-0.5 rounded whitespace-nowrap"
                 style={{ minWidth: '30px', textAlign: 'center' }}
             >
                 {formatEvaluation(evaluation)}

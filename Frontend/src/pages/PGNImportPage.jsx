@@ -28,60 +28,32 @@ function PGNImportPage() {
             ECO: 'N/A'
         };
 
-        // Regex to extract metadata
         const metadataRegex = /\[(\w+)\s+"([^"]+)"\]/g;
         let match;
-
         while ((match = metadataRegex.exec(pgnContent)) !== null) {
             const [, key, value] = match;
-
-            // Populate metadata with extracted values
-            switch (key) {
-                case 'Event': metadata.Event = value; break;
-                case 'Site': metadata.Site = value; break;
-                case 'Date': metadata.Date = value; break;
-                case 'Round': metadata.Round = value; break;
-                case 'White': metadata.White = value; break;
-                case 'Black': metadata.Black = value; break;
-                case 'Result': metadata.Result = value; break;
-                case 'WhiteElo': metadata.WhiteElo = value; break;
-                case 'BlackElo': metadata.BlackElo = value; break;
-                case 'TimeControl': metadata.TimeControl = value; break;
-                case 'Termination': metadata.Termination = value; break;
-                case 'ECO': metadata.ECO = value; break;
-            }
+            if (metadata.hasOwnProperty(key)) metadata[key] = value;
         }
 
         return metadata;
     };
 
     const extractMovesFromPGN = (pgnContent) => {
-        // Remove metadata and headers
         const movesSection = pgnContent.replace(/\[.*?\]/g, '').trim();
-
-        // Remove result and comments
         const cleanedMoves = movesSection
-            .replace(/\{[^}]*\}/g, '')  // Remove comments
-            .replace(/\([^)]*\)/g, '')  // Remove variations
-            .replace(/1-0|0-1|1\/2-1\/2|\*/g, '')  // Remove result
-            .replace(/\d+\./g, '')  // Remove move numbers
+            .replace(/\{[^}]*\}/g, '')
+            .replace(/\([^)]*\)/g, '')
+            .replace(/1-0|0-1|1\/2-1\/2|\*/g, '')
+            .replace(/\d+\./g, '')
             .trim();
 
-        // Split moves and filter out empty strings
-        return cleanedMoves
-            .split(/\s+/)
-            .filter(move => move.length > 0);
+        return cleanedMoves.split(/\s+/).filter(move => move.length > 0);
     };
 
     const processImportedPGN = (pgnContent) => {
         try {
-            // Extract metadata
             const metadata = parsePGNMetadata(pgnContent);
-
-            // Extract moves
             const moves = extractMovesFromPGN(pgnContent);
-
-            // Replay moves
             const game = new Chess();
             const validMoves = [];
 
@@ -89,25 +61,20 @@ function PGNImportPage() {
                 try {
                     game.move(move);
                     validMoves.push(move);
-                } catch (moveError) {
-                    console.warn(`Skipping invalid move: ${move}`);
+                } catch (err) {
+                    console.warn(`Invalid move skipped: ${move}`);
                 }
             }
 
-            // Create a structured game object
             const gameData = {
-                metadata: metadata,
+                metadata,
                 moves: validMoves,
                 startFen: game.fen(),
                 originalPGN: pgnContent
             };
 
-            // Store game data
             setImportedGameData(gameData);
-
-            // Set metadata
             setGameMetadata(metadata);
-
             setImportError('');
             setIsLoading(false);
         } catch (error) {
@@ -139,22 +106,20 @@ function PGNImportPage() {
 
     const navigateToGameReplay = () => {
         navigate('/game-replay', {
-            state: {
-                importedGame: importedGameData,
-            }
+            state: { importedGame: importedGameData }
         });
     };
 
     return (
-        <div className="min-h-screen bg-[#1a1b1e] p-6">
-            <div className="container mx-auto max-w-2xl">
-                <h1 className="text-3xl font-bold text-white mb-6 text-center">
+        <div className="min-h-screen bg-[#1a1b1e] p-4 sm:p-6">
+            <div className="max-w-3xl mx-auto">
+                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-6 text-center">
                     PGN Import
                 </h1>
 
-                <div className="bg-[#25262b] rounded-2xl p-6 shadow-xl">
-                    {/* File Upload Section */}
-                    <div className="mb-4">
+                <div className="bg-[#25262b] rounded-2xl p-4 sm:p-6 shadow-xl space-y-6">
+                    {/* Upload PGN */}
+                    <div>
                         <input
                             type="file"
                             ref={fileInputRef}
@@ -164,48 +129,49 @@ function PGNImportPage() {
                         />
                         <button
                             onClick={() => fileInputRef.current.click()}
-                            className="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors flex items-center justify-center"
+                            className="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-center transition"
                         >
                             Upload PGN File
                         </button>
                     </div>
 
-                    {/* Manual PGN Input */}
-                    <div className="mb-4">
+                    {/* Manual PGN Text Area */}
+                    <div>
                         <textarea
                             value={importedPGN}
                             onChange={(e) => setImportedPGN(e.target.value)}
                             placeholder="Paste PGN here... (Include metadata and moves)"
-                            className="w-full h-40 bg-[#2c2d32] text-white p-2 rounded mb-2 resize-none"
+                            className="w-full h-40 bg-[#2c2d32] text-white p-3 rounded resize-none"
                         />
                         <button
                             onClick={handleManualPGNImport}
-                            className="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition-colors"
+                            className="mt-2 w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition"
                         >
                             Import PGN
                         </button>
                     </div>
 
-                    {/* Loading and Error States */}
+                    {/* Loading Spinner */}
                     {isLoading && (
-                        <div className="flex justify-center items-center py-4">
-                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-blue-500"></div>
-                            <span className="ml-2 text-white">Processing PGN...</span>
+                        <div className="flex items-center justify-center gap-2 text-white py-3">
+                            <div className="animate-spin h-6 w-6 border-2 border-t-transparent rounded-full border-blue-500" />
+                            <span>Processing PGN...</span>
                         </div>
                     )}
 
+                    {/* Error Message */}
                     {importError && (
-                        <div className="bg-red-500/10 border border-red-500 rounded p-3 text-red-400 text-center">
+                        <div className="bg-red-500/10 border border-red-500 text-red-400 text-sm p-3 rounded text-center">
                             {importError}
                         </div>
                     )}
 
-                    {/* Game Replay Option */}
+                    {/* Replay & Analyze Buttons */}
                     {importedGameData && !isLoading && (
-                        <div className="mt-4 flex space-x-4">
+                        <div className="flex flex-col sm:flex-row gap-3 pt-2">
                             <button
                                 onClick={navigateToGameReplay}
-                                className="flex-1 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded transition-colors"
+                                className="w-full bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded transition"
                             >
                                 Replay Game
                             </button>
@@ -216,7 +182,7 @@ function PGNImportPage() {
                                         gameMetadata: gameMetadata
                                     }
                                 })}
-                                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors"
+                                className="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition"
                             >
                                 Full Analysis
                             </button>

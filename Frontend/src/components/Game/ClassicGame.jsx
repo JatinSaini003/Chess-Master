@@ -366,28 +366,36 @@ function ClassicGame() {
 
     return (
         <DndProvider backend={HTML5Backend}>
-            <div className=" bg-gray-900 p-3">
-                <div className="max-w-7xl mx-auto flex gap-4">
-                    <div className="flex-1 flex flex-col">
+            <div className="bg-gray-900 p-3 min-h-screen">
+                <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-4">
 
-                        {/* Black's Timer and Captured Pieces */}
-                        <div className="flex items-center justify-between mb-2">
+                    {/* Left Side - Game Area */}
+                    <div className="w-full lg:flex-1 flex flex-col">
+
+                        {/* Black Timer & Captured Pieces */}
+                        <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                             <div className="flex items-center gap-2">
-                                <span className="text-white text-lg">Black (1500)</span>
+                                <span className="text-white text-base sm:text-lg">Black (1500)</span>
                                 <div className="flex gap-0.5">
                                     {renderCapturedPieces('b')}
                                 </div>
                             </div>
-                            <div className={`px-3 py-1 rounded text-lg transition-all duration-200 
-                        ${isPlayerTurn('b') ? 'bg-blue-600 text-white ring-2 ring-blue-400 shadow-lg scale-105' : 'bg-gray-700 text-gray-300'}`}>
+                            <div
+                                className={`px-3 py-1 rounded text-base sm:text-lg transition-all duration-200 
+                                ${isPlayerTurn('b') ? 'bg-blue-600 text-white ring-2 ring-blue-400 shadow-lg scale-105' : 'bg-gray-700 text-gray-300'}`}>
                                 {formatTime(state.timeLeft.b)}
                             </div>
                         </div>
 
-                        {/* Chess Board */}
-                        <div className="flex">
-                            <EvaluationBar position={state.game.fen()} />
-                            <div className="flex-1">
+                        {/* Chess Board and Evaluation */}
+                        <div className="flex justify-center items-start w-full gap-2 overflow-x-auto">
+                            {/* Evaluation Bar */}
+                            <div className="w-4 sm:w-5 md:w-6 h-full">
+                                <EvaluationBar position={state.game.fen()} />
+                            </div>
+
+                            {/* Board */}
+                            <div className="relative aspect-square w-full max-w-[90vw] sm:max-w-[500px]">
                                 <Board
                                     position={state.game.fen()}
                                     onSquareClick={handleSquareClick}
@@ -399,27 +407,28 @@ function ClassicGame() {
                             </div>
                         </div>
 
-                        {/* White's Timer and Captured Pieces */}
-                        <div className="flex items-center justify-between">
+
+                        {/* White Timer & Captured Pieces */}
+                        <div className="flex items-center justify-between mt-2 flex-wrap gap-2">
                             <div className="flex items-center gap-2">
-                                <span className="text-white text-lg">White (1600)</span>
+                                <span className="text-white text-base sm:text-lg">White (1600)</span>
                                 <div className="flex gap-0.5">
                                     {renderCapturedPieces('w')}
                                 </div>
                             </div>
-                            <div className={`px-3 py-1 rounded text-lg transition-all duration-200 
-                        ${isPlayerTurn('w') ? 'bg-blue-600 text-white ring-2 ring-blue-400 shadow-lg scale-105' : 'bg-gray-700 text-gray-300'}`}>
+                            <div
+                                className={`px-3 py-1 rounded text-base sm:text-lg transition-all duration-200 
+                                 ${isPlayerTurn('w') ? 'bg-blue-600 text-white ring-2 ring-blue-400 shadow-lg scale-105' : 'bg-gray-700 text-gray-300'}`}>
                                 {formatTime(state.timeLeft.w)}
                             </div>
                         </div>
-
                     </div>
 
                     {/* Right Sidebar */}
-                    <div className="w-64 flex flex-col gap-4">
+                    <div className="w-full lg:w-64 flex flex-col gap-4">
                         <button
                             onClick={() => navigate('/analysis')}
-                            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm sm:text-base"
                         >
                             Analyze Game
                         </button>
@@ -436,9 +445,7 @@ function ClassicGame() {
                                 onDrawOffer={handleDrawOffer}
                             />
                         </div>
-
                     </div>
-
                 </div>
 
                 {/* Game Over Modal */}
@@ -450,7 +457,6 @@ function ClassicGame() {
                     onDeclineDraw={handleDeclineDraw}
                     isDraw={isDraw}
                 />
-
             </div>
         </DndProvider>
     );

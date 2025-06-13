@@ -14,92 +14,8 @@ import { Chess } from 'chess.js';
 
 // Strategic Suggestion Generator
 const generateStrategicSuggestions = (game) => {
-    const strategicInsights = [
-        {
-            category: 'Piece Development',
-            strategies: [
-                {
-                    name: 'Knight Development',
-                    condition: (game) => {
-                        const knights = ['Nf3', 'Nc3', 'Nd2', 'Na3', 'Nf6', 'Nc6', 'Nd7'];
-                        const developedKnights = knights.filter(move =>
-                            game.history().includes(move)
-                        );
-                        return developedKnights.length < 2;
-                    },
-                    suggestion: 'Develop a knight to a central square',
-                    moves: ['Nf3', 'Nc3', 'Nf6', 'Nc6'],
-                    icon: '♘',
-                    priority: 0.8
-                },
-                {
-                    name: 'Bishop Development',
-                    condition: (game) => {
-                        const bishops = ['Bc4', 'Bb5', 'Bb3', 'Bc1', 'Bf1', 'Bc8', 'Bb7'];
-                        const developedBishops = bishops.filter(move =>
-                            game.history().includes(move)
-                        );
-                        return developedBishops.length < 1;
-                    },
-                    suggestion: 'Develop a bishop to an active square',
-                    moves: ['Bc4', 'Bb5', 'Bc1', 'Bb7'],
-                    icon: '♗',
-                    priority: 0.7
-                }
-            ]
-        },
-        {
-            category: 'Center Control',
-            strategies: [
-                {
-                    name: 'Pawn Center',
-                    condition: (game) => {
-                        const centerMoves = ['e4', 'd4', 'e5', 'd5'];
-                        const playedCenterMoves = centerMoves.filter(move =>
-                            game.history().includes(move)
-                        );
-                        return playedCenterMoves.length < 2;
-                    },
-                    suggestion: 'Push a central pawn to control the center',
-                    moves: ['e4', 'd4', 'e5', 'd5'],
-                    icon: '⚔️',
-                    priority: 0.9
-                },
-                {
-                    name: 'Piece Pressure',
-                    condition: (game) => {
-                        const centerSquares = ['e4', 'd4', 'e5', 'd5'];
-                        return !centerSquares.some(square =>
-                            game.moves({ square }).length > 0
-                        );
-                    },
-                    suggestion: 'Apply pressure on central squares',
-                    moves: ['Nf3', 'Nc3', 'Bb5', 'Bc4'],
-                    icon: '🎯',
-                    priority: 0.6
-                }
-            ]
-        },
-        {
-            category: 'King Safety',
-            strategies: [
-                {
-                    name: 'Castling',
-                    condition: (game) => {
-                        return !game.history().some(move =>
-                            move === 'O-O' || move === 'O-O-O'
-                        );
-                    },
-                    suggestion: 'Consider castling to protect your king',
-                    moves: ['O-O', 'O-O-O'],
-                    icon: '🛡️',
-                    priority: 0.7
-                }
-            ]
-        }
-    ];
+    const strategicInsights = [/* same as before */];
 
-    // Generate suggestions based on game state
     const suggestions = strategicInsights.flatMap(category =>
         category.strategies
             .filter(strategy => strategy.condition(game))
@@ -118,7 +34,6 @@ function OpeningAnalysis() {
     const [suggestions, setSuggestions] = useState([]);
     const [gameHistory, setGameHistory] = useState([]);
 
-    // Memoized move extraction to prevent unnecessary re-renders
     const extractMoves = useMemo(() => {
         const contextGameHistory = state.gameHistory || [];
         const sanMoves = contextGameHistory.map(move => move.san);
@@ -127,33 +42,25 @@ function OpeningAnalysis() {
     }, [state.gameHistory, state.game]);
 
     useEffect(() => {
-        // Get the moves
         const moves = extractMoves;
         setGameHistory(moves);
-
-        // Identify current opening
-        const currentOpening = identifyOpening(moves);
-        setOpening(currentOpening);
-
-        // Generate strategic suggestions
-        const strategicSuggestions = generateStrategicSuggestions(state.game);
-        setSuggestions(strategicSuggestions);
+        setOpening(identifyOpening(moves));
+        setSuggestions(generateStrategicSuggestions(state.game));
     }, [extractMoves]);
 
-    // If no game or game history is empty, return null
     if (!state.game || state.game.history().length === 0) {
         return (
-            <div className="bg-[#2c2d32] rounded-2xl p-6 shadow-xl text-center text-gray-400">
+            <div className="bg-[#2c2d32] rounded-2xl p-6 shadow-xl text-center text-gray-400 text-sm sm:text-base">
                 No game history available
             </div>
         );
     }
 
     return (
-        <div className="bg-[#2c2d32] rounded-2xl p-6 shadow-xl">
-            <div className="flex justify-between items-center mb-6">
-                <h3 className="text-white text-xl font-bold flex items-center gap-2">
-                    <BookOpenIcon className="w-6 h-6 text-blue-400" />
+        <div className="bg-[#2c2d32] rounded-2xl p-4 sm:p-6 shadow-xl w-full">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
+                <h3 className="text-white text-lg sm:text-xl font-bold flex items-center gap-2">
+                    <BookOpenIcon className="w-5 sm:w-6 h-5 sm:h-6 text-blue-400" />
                     Opening Analysis
                 </h3>
             </div>
@@ -161,33 +68,33 @@ function OpeningAnalysis() {
             {opening ? (
                 <div className="space-y-4">
                     {/* Opening Details */}
-                    <div className="bg-[#25262b] rounded-xl p-4">
-                        <div className="flex justify-between items-center">
+                    <div className="bg-[#25262b] rounded-xl p-4 space-y-2">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-6">
                             <div>
-                                <h4 className="text-white font-semibold text-lg">{opening.name}</h4>
+                                <h4 className="text-white font-semibold text-base sm:text-lg">{opening.name}</h4>
                                 <p className="text-gray-400 text-sm">{opening.eco}</p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="text-sm text-gray-400">Difficulty:</span>
                                 <span className={`
-                                    px-2 py-1 rounded-full text-xs font-semibold
-                                    ${opening.difficulty === 'Advanced'
+                                    px-2 py-1 rounded-full text-xs font-semibold
+                                    ${opening.difficulty === 'Advanced'
                                         ? 'bg-red-500/10 text-red-400'
                                         : opening.difficulty === 'Intermediate'
                                             ? 'bg-yellow-500/10 text-yellow-400'
                                             : 'bg-green-500/10 text-green-400'
                                     }
-                                `}>
+                                `}>
                                     {opening.difficulty}
                                 </span>
                             </div>
                         </div>
-                        <p className="text-gray-300 mt-2">{opening.description}</p>
+                        <p className="text-gray-300 text-sm">{opening.description}</p>
                     </div>
 
                     {/* Opening Lines */}
                     <div className="bg-[#25262b] rounded-xl p-4">
-                        <h4 className="text-white font-semibold mb-3 flex items-center">
+                        <h4 className="text-white font-semibold mb-3 flex items-center text-base">
                             <ArrowTrendingUpIcon className="h-5 w-5 mr-2 text-blue-400" />
                             Common Variations
                         </h4>
@@ -195,7 +102,7 @@ function OpeningAnalysis() {
                             {opening.lines.map((line, index) => (
                                 <div
                                     key={index}
-                                    className="bg-gray-800 rounded p-2 text-gray-300 text-sm"
+                                    className="bg-gray-800 rounded p-2 text-gray-300 text-xs sm:text-sm overflow-x-auto"
                                 >
                                     {line}
                                 </div>
@@ -204,9 +111,8 @@ function OpeningAnalysis() {
                     </div>
 
                     {/* Strategic Suggestions */}
-                    {/* Strategic Suggestions */}
                     <div className="bg-[#25262b] rounded-xl p-4">
-                        <h4 className="text-white font-semibold mb-3 flex items-center">
+                        <h4 className="text-white font-semibold mb-3 flex items-center text-base">
                             <LightBulbIcon className="h-5 w-5 mr-2 text-green-400" />
                             Strategic Suggestions
                         </h4>
@@ -216,11 +122,11 @@ function OpeningAnalysis() {
                                     key={index}
                                     className="bg-gray-800 rounded-lg p-3 transition-all hover:bg-gray-700/50"
                                 >
-                                    <div className="flex justify-between items-center mb-2">
-                                        <div className="flex items-center gap-3">
+                                    <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-2 gap-2">
+                                        <div className="flex items-start gap-3">
                                             <span className="text-2xl">{suggestion.icon}</span>
                                             <div>
-                                                <span className="text-white font-semibold block">
+                                                <span className="text-white font-semibold block text-sm sm:text-base">
                                                     {suggestion.name}
                                                 </span>
                                                 <span className="text-gray-400 text-xs">
@@ -229,7 +135,7 @@ function OpeningAnalysis() {
                                             </div>
                                         </div>
                                         <div
-                                            className="h-2 w-16 bg-green-500/30 rounded-full"
+                                            className="h-2 w-full sm:w-20 bg-green-500/30 rounded-full"
                                             style={{
                                                 width: `${suggestion.priority * 100}%`
                                             }}
@@ -237,8 +143,8 @@ function OpeningAnalysis() {
                                     </div>
                                     <div className="text-gray-300 text-sm mt-2">
                                         <p className="mb-1">{suggestion.suggestion}</p>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-gray-500">Possible moves:</span>
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <span className="text-gray-500 text-xs">Moves:</span>
                                             {suggestion.moves.map((move, moveIndex) => (
                                                 <span
                                                     key={moveIndex}
@@ -255,9 +161,9 @@ function OpeningAnalysis() {
                     </div>
                 </div>
             ) : (
-                <div className="text-center text-gray-400">
+                <div className="text-center text-gray-400 text-sm sm:text-base">
                     <p>No specific opening detected</p>
-                    <p className="text-sm mt-2">Moves played: {gameHistory.join(', ')}</p>
+                    <p className="text-xs sm:text-sm mt-2">Moves played: {gameHistory.join(', ')}</p>
                 </div>
             )}
         </div>

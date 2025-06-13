@@ -4,8 +4,8 @@ import { MoveQualityService } from '../../../services/moveQuality.service';
 
 function DetailedMoveAnalysis({ moves, currentPosition }) {
     return (
-        <div className="bg-gray-800 rounded-lg p-4">
-            <h3 className="text-white text-lg font-semibold mb-4">Detailed Analysis</h3>
+        <div className="bg-gray-800 rounded-xl p-4 md:p-6 w-full shadow-lg">
+            <h3 className="text-white text-lg font-semibold mb-4">Detailed Move Analysis</h3>
             <div className="space-y-4">
                 {moves.map((move, index) => (
                     <MoveDetail
@@ -42,21 +42,22 @@ function MoveDetail({ move, moveNumber, isSelected }) {
 
     return (
         <div className={`p-3 rounded-lg ${isSelected ? 'bg-blue-900' : 'bg-gray-700'}`}>
-            <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="flex items-center flex-wrap gap-2">
                     <span className="text-gray-400">{moveNumber}.</span>
                     <span className="text-white font-medium">{move.san}</span>
-                    <span className={getQualityColor(quality.classification.type)}>
+                    <span className={`${getQualityColor(quality.classification.type)} font-semibold`}>
                         {quality.classification.symbol}
                     </span>
                 </div>
-                <div className="text-gray-300">
-                    {quality.accuracy.toFixed(1)}%
+                <div className="text-gray-300 text-sm sm:text-base">
+                    Accuracy: {quality.accuracy.toFixed(1)}%
                 </div>
             </div>
+
             {move.bestLine && (
-                <div className="mt-2 text-sm text-gray-400">
-                    Best line: {move.bestLine}
+                <div className="mt-2 text-sm text-gray-400 break-words">
+                    Best line: <span className="text-gray-200">{move.bestLine}</span>
                 </div>
             )}
         </div>

@@ -6,7 +6,7 @@ function EngineAnalysis({ position, onAnalysis }) {
     const [analysis, setAnalysis] = useState(null);
     const [depth, setDepth] = useState(20);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [multiPV, setMultiPV] = useState(3); // Number of lines to analyze
+    const [multiPV, setMultiPV] = useState(3); // Unused currently, can be used for multiple lines in future
 
     const analyzePosition = useCallback(async () => {
         if (!position || isAnalyzing) return;
@@ -40,26 +40,26 @@ function EngineAnalysis({ position, onAnalysis }) {
     };
 
     return (
-        <div className="bg-gray-700 rounded-lg p-4">
-            <div className="flex justify-between items-center mb-4">
+        <div className="bg-gray-700 rounded-xl p-4 md:p-6 w-full shadow-xl">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
                 <h3 className="text-white text-lg font-semibold">Engine Analysis</h3>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
                     <select
                         value={depth}
                         onChange={(e) => setDepth(Number(e.target.value))}
                         className="bg-gray-600 text-white rounded px-2 py-1"
                     >
-                        {[10, 15, 20, 25, 30].map(d => (
+                        {[10, 15, 20, 25, 30].map((d) => (
                             <option key={d} value={d}>Depth {d}</option>
                         ))}
                     </select>
                     <button
                         onClick={analyzePosition}
                         disabled={isAnalyzing}
-                        className={`px-3 py-1 rounded ${isAnalyzing
+                        className={`px-3 py-1 rounded text-white transition ${isAnalyzing
                                 ? 'bg-gray-500 cursor-not-allowed'
                                 : 'bg-blue-500 hover:bg-blue-600'
-                            } text-white`}
+                            }`}
                     >
                         {isAnalyzing ? 'Analyzing...' : 'Analyze'}
                     </button>
@@ -73,16 +73,21 @@ function EngineAnalysis({ position, onAnalysis }) {
                         <div
                             className="h-full bg-blue-500 transition-all duration-300"
                             style={{
-                                width: `${50 + (analysis.score * 5)}%`,
-                                maxWidth: '100%',
-                                minWidth: '0%'
+                                width: `${Math.min(100, Math.max(0, 50 + analysis.score * 5))}%`,
                             }}
                         />
                     </div>
 
                     {/* Evaluation Score */}
-                    <div className="text-white text-center text-xl font-bold">
+                    <div className="text-white text-center text-2xl font-bold">
                         {formatEvaluation(analysis.score)}
+                    </div>
+
+                    {/* Best Move Suggestion */}
+                    <div className="bg-green-500 bg-opacity-20 p-3 rounded">
+                        <p className="text-white text-sm sm:text-base">
+                            Best move: <span className="font-bold">{analysis.bestMove}</span>
+                        </p>
                     </div>
 
                     {/* Best Lines */}
@@ -92,17 +97,9 @@ function EngineAnalysis({ position, onAnalysis }) {
                                 key={index}
                                 className="bg-gray-600 p-2 rounded text-white text-sm"
                             >
-                                <span className="font-medium">Line {index + 1}: </span>
-                                {line}
+                                <span className="font-medium">Line {index + 1}:</span> {line}
                             </div>
                         ))}
-                    </div>
-
-                    {/* Best Move Suggestion */}
-                    <div className="bg-green-500 bg-opacity-20 p-2 rounded">
-                        <p className="text-white">
-                            Best move: <span className="font-bold">{analysis.bestMove}</span>
-                        </p>
                     </div>
                 </div>
             )}

@@ -16,7 +16,6 @@ import bB from '../../assets/pieces/bB.svg';
 import bQ from '../../assets/pieces/bQ.svg';
 import bK from '../../assets/pieces/bK.svg';
 
-
 const pieceImages = {
     'P': wP,
     'R': wR,
@@ -32,8 +31,18 @@ const pieceImages = {
     'k': bK,
 };
 
-function Square({ isLight, piece, square, isSelected, isValidMove, isLastMove, isChecked, onClick, onDrop }) {
-    //Drag Functionality
+function Square({
+    isLight,
+    piece,
+    square,
+    isSelected,
+    isValidMove,
+    isLastMove,
+    isChecked,
+    onClick,
+    onDrop
+}) {
+    // Drag setup
     const [{ isDragging }, drag] = useDrag(() => ({
         type: 'piece',
         item: { piece, square },
@@ -42,17 +51,16 @@ function Square({ isLight, piece, square, isSelected, isValidMove, isLastMove, i
         }),
     }), [piece, square]);
 
-    //Drop Functionality
+    // Drop setup
     const [{ isOver }, drop] = useDrop(() => ({
         accept: 'piece',
         drop: (item) => onDrop(item.square, square),
         collect: (monitor) => ({
             isOver: !!monitor.isOver(),
         }),
-    }), [square, onDrop])
+    }), [square, onDrop]);
 
-
-    // Combine drag and drop refs
+    // Combine refs
     const dragDropRef = (node) => {
         drag(drop(node));
     };
@@ -60,38 +68,38 @@ function Square({ isLight, piece, square, isSelected, isValidMove, isLastMove, i
     return (
         <div
             ref={piece ? dragDropRef : drop}
-            className={`
-                aspect-square relative cursor-pointer
-                ${isLight ? 'bg-[#f0d9b5]' : 'bg-[#b58863]'}
-                ${isSelected ? 'border-2 border-yellow-400' : ''}
-                ${isLastMove ? 'bg-yellow-200 bg-opacity-50' : ''}
-                ${isChecked ? 'border-3 border-red-500 border-opacity-80' : ''}
-                ${isOver ? 'bg-blue-200 bg-opacity-50' : ''}
-                hover:opacity-90 transition-opacity
-      `}
             onClick={onClick}
+            className={`
+        aspect-square relative cursor-pointer transition-all
+        ${isLight ? 'bg-[#f0d9b5]' : 'bg-[#b58863]'}
+        ${isSelected ? 'border-2 border-yellow-400' : ''}
+        ${isLastMove ? 'bg-yellow-200 bg-opacity-50' : ''}
+        ${isChecked ? 'border-4 border-red-500 border-opacity-80' : ''}
+        ${isOver ? 'bg-blue-200 bg-opacity-50' : ''}
+        hover:opacity-90
+      `}
         >
             {piece && !isDragging && (
                 <motion.img
                     key={piece}
+                    src={pieceImages[piece]}
+                    alt={piece}
                     initial={{ scale: 0.8 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                    src={pieceImages[piece]}
-                    alt={piece}
-                    className={`absolute w-full h-full p-0.5 ${isChecked ? 'animate-pulse' : ''}`}
                     draggable={false}
+                    className={`absolute w-full h-full p-[2px] sm:p-1 md:p-1.5 ${isChecked ? 'animate-pulse' : ''}`}
                 />
             )}
 
-            {(isValidMove) && (
+            {isValidMove && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className={`${piece
-                        ? `w-full h-full border-3 ${isValidMove ? 'border-green-500' : 'border-gray-500'} opacity-50`
-                        : `w-3 h-3 rounded-full ${isValidMove ? 'bg-green-500' : 'bg-gray-500'} opacity-50`}`} />
+                    <div className={piece
+                        ? `w-full h-full border-4 ${isValidMove ? 'border-green-500' : 'border-gray-500'} opacity-50`
+                        : `w-[18%] h-[18%] sm:w-[14%] sm:h-[14%] rounded-full ${isValidMove ? 'bg-green-500' : 'bg-gray-500'} opacity-60`}
+                    />
                 </div>
             )}
-
         </div>
     );
 }
