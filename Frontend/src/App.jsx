@@ -7,7 +7,6 @@ import { Analysis } from './components/Analysis';
 import Home from './components/Home/Home';
 import GameReplay from './components/Game/GameReplay';
 import PGNImportPage from './pages/PGNImportPage';
-import './utils/chartSetup';
 
 function App() {
   return (
